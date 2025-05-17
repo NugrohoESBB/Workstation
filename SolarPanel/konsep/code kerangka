@@ -1,0 +1,192 @@
+code kerangka:
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Perhitungan Irradiasi dan Panel Surya</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 8px 12px;
+      text-align: center;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <h2>Hitung Kapasitas Panel Surya</h2>
+
+  <form id="panelForm">
+    <label for="lokasiSelect">Pilih Lokasi:</label><br>
+    <select id="lokasiSelect" required>
+      <option value="">-- Pilih Lokasi --</option>
+    </select><br><br>
+
+    <label for="konfigurasi">Pilih Konfigurasi Panel:</label><br>
+    <select id="konfigurasi" required>
+      <option value="">-- Pilih Konfigurasi --</option>
+      <option value="off-grid">Off-grid</option>
+      <option value="hybrid">Hybrid</option>
+      <option value="on-grid">On-grid</option>
+    </select><br><br>
+
+    <label for="kebutuhan">Kebutuhan Energi Harian (kWh):</label><br>
+    <input type="number" id="kebutuhan" step="0.1" min="0.1" required><br><br>
+
+    <button type="submit">Hitung</button>
+  </form>
+
+  <div id="hasil"></div>
+  <div id="tabelPanel"></div>
+  <div id="tabelLuas"></div>
+  <div id="tabelBaterai"></div>
+  <div id="tabelJumlahBaterai"></div>
+  <div id="tabelInverter"></div>
+
+  <script>
+    let data = [];
+
+    fetch('data-irradiasi.json')
+    .then(res => res.json())
+    .then(json => {
+      data = json;
+      const select = document.getElementById('lokasiSelect');
+      data.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.kab_kota;
+        option.textContent = `${item.kab_kota} (${item.provinsi})`;
+        select.appendChild(option);
+      });
+    })
+    .catch(err => console.error("Gagal ambil data:", err));
+
+    document.getElementById('panelForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const kabKota = document.getElementById('lokasiSelect').value;
+      const konfigurasi = document.getElementById('konfigurasi').value;
+      const kebutuhan = parseFloat(document.getElementById('kebutuhan').value);
+
+      const lokasi = data.find(item => item.kab_kota === kabKota);
+
+      if (lokasi && kebutuhan && konfigurasi) {
+        const irradiasiHarian = Math.round(lokasi.irradiasi_bulanan / 30);
+        const efisiensi = konfigurasi === 'off-grid' ? 1 :
+        konfigurasi === 'hybrid' ? 0.8 :
+        konfigurasi === 'on-grid' ? 0.6 : 1;
+
+        const pembagi = irradiasiHarian * 0.66;
+        const wp = Math.ceil((kebutuhan * efisiensi / pembagi) * 1000);
+
+        document.getElementById('hasil').innerHTML = `
+          <h3>Hasil:</h3>
+          <p><strong>Rata-rata Irradiasi Bulanan:</strong> ${lokasi.irradiasi_bulanan}</p>
+          <p><strong>Rata-rata Irradiasi Harian:</strong> ${irradiasiHarian} kWh/m²</p>
+          <p><strong>Orientasi:</strong> ${lokasi.orientasi || '-'}</p>
+          <p><strong>Kemiringan:</strong> ${lokasi.kemiringan || '-'}</p>
+          <p><strong>Kapasitas Panel yang Dibutuhkan:</strong> <u>${wp} WP</u></p>
+          <br>
+        `;
+
+        const jenisPanel = ['Poli', 'Mono', 'Bifacial'];
+        const wpPanelOptions = [100, 200, 300, 500, 700];
+
+        const luasPanelValues = {
+          'Poli': { 100: 0.7324, 200: 1.4701, 300: 1.6269 },
+          'Mono': { 100: 0.648, 200: 1.2766, 500: 2.2092, 700: 2.6129 },
+          'Bifacial': { 100: 0.715, 200: 1.365, 500: 3.094, 700: 4.368 }
+        };
+
+        function hitungJumlahPanel(jenis, wpPanel) {
+          const excluded =
+          (jenis === 'Poli' && (wpPanel === 500 || wpPanel === 700)) ||
+          (jenis === 'Mono' && wpPanel === 300) ||
+          (jenis === 'Bifacial' && wpPanel === 300);
+          if (excluded) return 'X';
+          const faktor = jenis === 'Poli' ? 0.8 : jenis === 'Mono' ? 1 : 1.2;
+          return Math.ceil(wp / (wpPanel * faktor));
+        }
+
+        function hitungLuasPanel(jenis, wpPanel) {
+          const jumlahPanel = hitungJumlahPanel(jenis, wpPanel);
+          const luas = luasPanelValues[jenis] && luasPanelValues[jenis][wpPanel];
+          if (jumlahPanel === 'X' || !luas) return 'X';
+          return (jumlahPanel * luas).toFixed(2) + ' m²';
+        }
+
+        // Tabel Jumlah Panel
+        let tableHTML = '<h3>Tabel Jumlah Panel:</h3><table>';
+        tableHTML += '<tr><th>Jenis \\ WP</th>' + wpPanelOptions.map(wp => `<th>${wp}</th>`).join('') + '</tr>';
+        jenisPanel.forEach(jenis => {
+          tableHTML += `<tr><td><strong>${jenis}</strong></td>`;
+          wpPanelOptions.forEach(wpPanel => {
+            tableHTML += `<td>${hitungJumlahPanel(jenis, wpPanel)}</td>`;
+          });
+          tableHTML += '</tr>';
+        });
+        tableHTML += '</table>';
+        document.getElementById('tabelPanel').innerHTML = tableHTML;
+
+        // Tabel Luas Panel
+        let tableLuas = '<h3>Tabel Luas Panel:</h3><table>';
+        tableLuas += '<tr><th>Jenis \\ WP</th>' + wpPanelOptions.map(wp => `<th>${wp}</th>`).join('') + '</tr>';
+        jenisPanel.forEach(jenis => {
+          tableLuas += `<tr><td><strong>${jenis}</strong></td>`;
+          wpPanelOptions.forEach(wpPanel => {
+            tableLuas += `<td>${hitungLuasPanel(jenis, wpPanel)}</td>`;
+          });
+          tableLuas += '</tr>';
+        });
+        tableLuas += '</table>';
+        document.getElementById('tabelLuas').innerHTML = tableLuas;
+
+        // Tabel Kapasitas Baterai
+        const kapasitasBaterai = Math.ceil((wp / 0.95) * 2);
+        let tableBaterai = '<h3>Tabel Kapasitas Baterai:</h3><table>';
+        tableBaterai += '<tr><th>Kapasitas Baterai (kWh)</th></tr>';
+        tableBaterai += `<tr><td>${kapasitasBaterai}</td></tr>`;
+        tableBaterai += '</table>';
+        document.getElementById('tabelBaterai').innerHTML = tableBaterai;
+
+        // Tabel Jumlah Baterai
+        const voltOptions = [12, 24, 48];
+        const ahOptions = [50, 100, 200, 300, 500];
+
+        let tabelJumlah = '<h3>Tabel Jumlah Baterai:</h3><table>';
+        tabelJumlah += '<tr><th>V/Ah</th>' + ahOptions.map(ah => `<th>${ah}</th>`).join('') + '</tr>';
+
+        voltOptions.forEach(v => {
+          tabelJumlah += `<tr><td><strong>${v}</strong></td>`;
+          ahOptions.forEach(ah => {
+            const jumlah = Math.ceil(kapasitasBaterai / (v * ah));
+            tabelJumlah += `<td>${jumlah}</td>`;
+          });
+          tabelJumlah += '</tr>';
+        });
+
+        tabelJumlah += '</table>';
+        document.getElementById('tabelJumlahBaterai').innerHTML = tabelJumlah;
+
+        // Tabel Kapasitas Inverter
+        const kapasitasInverter = Math.ceil((wp * 2) / 1000);
+        let tableInverter = '<h3>Tabel Kapasitas Inverter:</h3><table>';
+        tableInverter += '<tr><th>Kapasitas Inverter (kWh)</th></tr>';
+        tableInverter += `<tr><td>${kapasitasInverter}</td></tr>`;
+        tableInverter += '</table>';
+        document.getElementById('tabelInverter').innerHTML = tableInverter;
+
+
+      } else {
+        alert("Pastikan semua form terisi dengan benar.");
+      }
+    });
+  </script>
+</body>
+</html>

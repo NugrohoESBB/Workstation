@@ -1,0 +1,86 @@
+[
+  {
+    "provinsi": "Nanggroe Aceh Darussalam",
+    "kab_kota": "Lhoksukon, Aceh Utara",
+    "irradiasi_bulanan": 157.9861111,
+    "orientasi": "S",
+    "kemiringan": 5
+  },
+  {
+    "provinsi": "Nanggroe Aceh Darussalam",
+    "kab_kota": "Seunagan, Nagan Raya",
+    "irradiasi_bulanan": 151.622963,
+    "orientasi": "S",
+    "kemiringan": 4.2
+  },
+  {
+    "provinsi": "Sumatera Selatan",
+    "kab_kota": "Muara Enim, Muara Enim",
+    "irradiasi_bulanan": 154.2344444,
+    "orientasi": "U",
+    "kemiringan": 3.8
+  },
+  {
+    "provinsi": "Kalimantan Tengah",
+    "kab_kota": "Mentawa Baru Ketapang, Kotawaringin Timur",
+    "irradiasi_bulanan": 147.7202778,
+    "orientasi": "U",
+    "kemiringan": null
+  },
+  {
+    "provinsi": "Banten",
+    "kab_kota": "Cimanggu, Pandeglang",
+    "irradiasi_bulanan": 158.9333333,
+    "orientasi": "U",
+    "kemiringan": 6.6
+  },
+  {
+    "provinsi": "Banten",
+    "kab_kota": "Mancak, Serang",
+    "irradiasi_bulanan": 151.87,
+    "orientasi": "U",
+    "kemiringan": 6.1
+  },
+  {
+    "provinsi": "Banten",
+    "kab_kota": "Balaraja, Tangerang",
+    "irradiasi_bulanan": 152.02,
+    "orientasi": "U",
+    "kemiringan": 6.2
+  },
+  {
+    "provinsi": "Banten",
+    "kab_kota": "Sobang, Lebak",
+    "irradiasi_bulanan": 151.0345,
+    "orientasi": "U",
+    "kemiringan": 6.6
+  },
+  {
+    "provinsi": "DKI Jakarta",
+    "kab_kota": "Senen, Jakarta Pusat",
+    "irradiasi_bulanan": 164.0225,
+    "orientasi": "U",
+    "kemiringan": 6.2
+  },
+  {
+    "provinsi": "Jawa Timur",
+    "kab_kota": "Kota Sumenep, Sumenep",
+    "irradiasi_bulanan": 178.1436111,
+    "orientasi": "U",
+    "kemiringan": 7
+  },
+  {
+    "provinsi": "Gorontalo",
+    "kab_kota": "Gorontalo Utara",
+    "irradiasi_bulanan": 166.4258333,
+    "orientasi": "S",
+    "kemiringan": 1
+  },
+  {
+    "provinsi": "Sulawesi Selatan",
+    "kab_kota": "Mappedeceng, Luwu Utara",
+    "irradiasi_bulanan": 148.2336111,
+    "orientasi": "U",
+    "kemiringan": null
+  }
+]
